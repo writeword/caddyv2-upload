@@ -205,6 +205,9 @@ func (u Upload) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp
 	// the Header and the size of the file
 	file, handler, ff_err := r.FormFile(u.FileFieldName)
 	destFile := r.PostFormValue("destFile")
+	if destFile == "" {
+		destFile = handler.Filename
+	}
 	if ff_err != nil {
 		u.logger.Error("FormFile Error",
 			zap.String("requuid", requuid),
