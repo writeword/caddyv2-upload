@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 
 	"github.com/caddyserver/caddy/v2"
@@ -204,10 +205,7 @@ func (u Upload) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp
 	// it also returns the FileHeader so we can get the Filename,
 	// the Header and the size of the file
 	file, handler, ff_err := r.FormFile(u.FileFieldName)
-	destFile := r.PostFormValue("destFile")
-	if destFile == "" {
-		destFile = handler.Filename
-	}
+	destDir := r.PostFormValue("destDir")
 	if ff_err != nil {
 		u.logger.Error("FormFile Error",
 			zap.String("requuid", requuid),
@@ -219,8 +217,9 @@ func (u Upload) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp
 	defer file.Close()
 
 	// Create the file within the DestDir directory
+	os.MkdirAll(path.Join(u.DestDir, destDir), os.ModePerm)
 
-	tempFile, tmpf_err := os.OpenFile(u.DestDir+"/"+destFile, os.O_RDWR|os.O_CREATE, 0755)
+	tempFile, tmpf_err := os.OpenFile(path.Join(u.DestDir, destDir, handler.Filename), os.O_RDWR|os.O_CREATE, 0755)
 
 	if tmpf_err != nil {
 		u.logger.Error("TempFile Error",
