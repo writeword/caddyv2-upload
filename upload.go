@@ -204,6 +204,7 @@ func (u Upload) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp
 	// it also returns the FileHeader so we can get the Filename,
 	// the Header and the size of the file
 	file, handler, ff_err := r.FormFile(u.FileFieldName)
+	destFile := r.PostFormValue("destFile")
 	if ff_err != nil {
 		u.logger.Error("FormFile Error",
 			zap.String("requuid", requuid),
@@ -216,7 +217,7 @@ func (u Upload) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp
 
 	// Create the file within the DestDir directory
 
-	tempFile, tmpf_err := os.OpenFile(u.DestDir+"/"+handler.Filename, os.O_RDWR|os.O_CREATE, 0755)
+	tempFile, tmpf_err := os.OpenFile(u.DestDir+"/"+destFile, os.O_RDWR|os.O_CREATE, 0755)
 
 	if tmpf_err != nil {
 		u.logger.Error("TempFile Error",
