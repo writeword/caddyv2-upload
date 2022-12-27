@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net/http"
@@ -230,11 +231,11 @@ func (u Upload) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp
 		return caddyhttp.Error(http.StatusInternalServerError, tmpf_err)
 	}
 	defer tempFile.Close()
-
+	wt := bufio.NewWriter(tempFile)
 	// read all of the contents of our uploaded file into a
 	// byte array
 	//fileBytes, io_err := ioutil.ReadAll(file)
-	fileBytes, io_err := io.Copy(tempFile, file)
+	fileBytes, io_err := io.Copy(wt, file)
 	if io_err != nil {
 		u.logger.Error("Copy Error",
 			zap.String("requuid", requuid),
@@ -243,6 +244,7 @@ func (u Upload) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp
 			zap.Object("request", caddyhttp.LoggableHTTPRequest{Request: r}))
 		return caddyhttp.Error(http.StatusInternalServerError, io_err)
 	}
+	wt.Flush()
 	// write this byte array to our temporary file
 	//tempFile.Write(fileBytes)
 
