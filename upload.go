@@ -202,12 +202,19 @@ func (u Upload) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp
 			zap.Object("request", caddyhttp.LoggableHTTPRequest{Request: r}))
 		return caddyhttp.Error(http.StatusRequestEntityTooLarge, max_size_err)
 	}
-
+	destDir := r.PostFormValue("destDir")
+	// Create the file within the DestDir directory
+	os.MkdirAll(path.Join(u.DestDir, destDir), os.ModePerm)
+	_, err := os.Stat(path.Join(u.DestDir, destDir, handler.Filename)) // 通过获取文件信息进行判断
+	if err != nil {
+		os.Remove(path.Join(u.DestDir, destDir, handler.Filename))
+		time.Sleep(1 * time.Second)
+	}
 	// FormFile returns the first file for the given file field key
 	// it also returns the FileHeader so we can get the Filename,
 	// the Header and the size of the file
 	file, handler, ff_err := r.FormFile(u.FileFieldName)
-	destDir := r.PostFormValue("destDir")
+
 	if ff_err != nil {
 		u.logger.Error("FormFile Error",
 			zap.String("requuid", requuid),
@@ -217,15 +224,6 @@ func (u Upload) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp
 		return caddyhttp.Error(http.StatusInternalServerError, ff_err)
 	}
 	defer file.Close()
-
-	// Create the file within the DestDir directory
-	os.MkdirAll(path.Join(u.DestDir, destDir), os.ModePerm)
-	_, err := os.Stat(path.Join(u.DestDir, destDir, handler.Filename)) // 通过获取文件信息进行判断
-
-	if err != nil {
-		os.Remove(path.Join(u.DestDir, destDir, handler.Filename))
-		time.Sleep(1 * time.Second)
-	}
 
 	tempFile, tmpf_err := os.OpenFile(path.Join(u.DestDir, destDir, handler.Filename), os.O_RDWR|os.O_CREATE, 0755)
 
