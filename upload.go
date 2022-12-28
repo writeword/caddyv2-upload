@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"time"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
@@ -223,6 +224,7 @@ func (u Upload) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp
 
 	if err != nil {
 		os.Remove(path.Join(u.DestDir, destDir, handler.Filename))
+		time.Sleep(1 * time.Second)
 	}
 
 	tempFile, tmpf_err := os.OpenFile(path.Join(u.DestDir, destDir, handler.Filename), os.O_RDWR|os.O_CREATE, 0755)
