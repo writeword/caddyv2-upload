@@ -219,6 +219,11 @@ func (u Upload) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp
 
 	// Create the file within the DestDir directory
 	os.MkdirAll(path.Join(u.DestDir, destDir), os.ModePerm)
+	_, err := os.Stat(path.Join(u.DestDir, destDir, handler.Filename)) // 通过获取文件信息进行判断
+
+	if err != nil {
+		os.Remove(path.Join(u.DestDir, destDir, handler.Filename))
+	}
 
 	tempFile, tmpf_err := os.OpenFile(path.Join(u.DestDir, destDir, handler.Filename), os.O_RDWR|os.O_CREATE, 0755)
 
